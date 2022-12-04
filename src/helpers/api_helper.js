@@ -4,6 +4,7 @@ import { message } from "antd";
 
 // default
 axios.defaults.baseURL = api.API_URL;
+// axios.defaults.baseURL = api.API_URL_DEV;
 // content type
 axios.defaults.headers.post["Content-Type"] = "application/json";
 
@@ -15,7 +16,7 @@ const urlRefreshToken = "/api/users/refresh-token";
 const token = sessionStorage.getItem("authUser")
   ? sessionStorage.getItem("authUser")
   : null;
-if (token) axios.defaults.headers.common["Authorization"] = "Bearer " + token;
+if (token) axios.defaults.headers.common["Authorization"] = token;
 
 // intercepting to capture errors
 axios.interceptors.response.use(
@@ -23,14 +24,10 @@ axios.interceptors.response.use(
     return response.data ? response.data : response;
   },
   function (error) {
-    if (error.response.data === "Forbidden") {
-      message.error(`Don't have permission!`);
-    }
-
-    if (error.response.data.data.name === "TokenExpiredError") {
+    if (error.response.data.message === "invalid token") {
       message.error(`Please login to continue!`);
       setTimeout(() => {
-        window.location.replace("/logout");
+        // window.location.replace("/logout");
       }, 3000);
     }
 
@@ -42,7 +39,7 @@ axios.interceptors.response.use(
  * @param {*} token
  */
 const setAuthorization = (token) => {
-  axios.defaults.headers.common["Authorization"] = "Bearer " + token;
+  axios.defaults.headers.common["Authorization"] = token;
 };
 
 class APIClient {
@@ -51,13 +48,11 @@ class APIClient {
    */
   get = async (url, params) => {
     let response;
-
     let paramKeys = [];
     const token = sessionStorage.getItem("authUser")
       ? sessionStorage.getItem("authUser")
       : null;
-    if (token)
-      axios.defaults.headers.common["Authorization"] = "Bearer " + token;
+    if (token) axios.defaults.headers.common["Authorization"] = token;
     if (params) {
       Object.keys(params).map((key) => {
         paramKeys.push(key + "=" + params[key]);

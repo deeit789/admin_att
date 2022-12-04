@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { LaptopOutlined, FieldTimeOutlined } from "@ant-design/icons";
+import { LaptopOutlined, LineOutlined } from "@ant-design/icons";
 
 import { Layout, Menu } from "antd";
 
 import DashboardPage from "../pages/dashboard";
 import MatchPage from "../pages/score-prediction/match";
+import HistoryMatchPage from "../pages/score-prediction/history";
 
 import { Navigate, useNavigate, useLocation, Link } from "react-router-dom";
 
@@ -19,7 +20,12 @@ const menuSider = [
       {
         key: `app-score-prediction-match`,
         label: `Trận đấu`,
-        icon: <FieldTimeOutlined />,
+        icon: <LineOutlined />,
+      },
+      {
+        key: `app-score-prediction-history`,
+        label: `Lịch sử dự đoán`,
+        icon: <LineOutlined />,
       },
     ],
   },
@@ -33,6 +39,11 @@ const authProtectedRoutes = [
     component: <MatchPage />,
   },
   {
+    key: "app-score-prediction-history",
+    path: "/score-prediction/history",
+    component: <HistoryMatchPage />,
+  },
+  {
     path: "/",
     component: () => <Navigate to="/score-prediction/match" />,
   },
@@ -41,6 +52,10 @@ const authProtectedRoutes = [
 const AuthProtectedLayout = (props) => {
   const [collapsed, setCollapsed] = useState(false);
   const [components, setComponents] = useState(null);
+  const [defaultOpenKeys, setDefaultOpenKeys] = useState(
+    "app-score-prediction"
+  );
+  const [selectedKeys, setSelectedKeys] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -48,8 +63,10 @@ const AuthProtectedLayout = (props) => {
     const itemMenuClicked = authProtectedRoutes.filter(
       (items) => items.path === location.pathname
     );
-    if (itemMenuClicked.length > 0) setComponents(itemMenuClicked[0].component);
-    else navigate("/404");
+    if (itemMenuClicked.length > 0) {
+      setSelectedKeys(itemMenuClicked[0].key);
+      setComponents(itemMenuClicked[0].component);
+    } else navigate("/404");
   }, [location.pathname]);
 
   const onClickItemMenu = (item) => {
@@ -84,8 +101,8 @@ const AuthProtectedLayout = (props) => {
           <Menu
             theme="dark"
             mode="inline"
-            defaultSelectedKeys={["app-score-prediction-match"]}
-            defaultOpenKeys={["app-score-prediction"]}
+            selectedKeys={[selectedKeys]}
+            defaultOpenKeys={`app-score-prediction`}
             style={{
               height: "100%",
               borderRight: 0,

@@ -22,3 +22,11 @@ export const login = (data) => {
 export const postMatches = (data) => {
   return api.post(url.API_MATCHES, data);
 };
+
+export const getDataPredictionByDate = (data) => {
+  return api.post(url.API_MATCHSCORE_GET_DATE, data);
+};
+
+export const getAllDataPrediction = (data) => {
+  return api.get(url.API_V1_MATCHSCORE_GET_ALL, data);
+};

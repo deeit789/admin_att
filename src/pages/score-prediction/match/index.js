@@ -105,7 +105,7 @@ export default function MatchPage() {
           </Col>
           <Col span={12}>
             <Form.Item
-              label="Logo đội nhà"
+              label="Logo đội khách"
               name="away_flag"
               rules={[
                 {
