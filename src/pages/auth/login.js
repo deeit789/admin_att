@@ -31,7 +31,7 @@ export default function LoginPage() {
 
     setLoading(true);
     const _res = await login(_req);
-    if (_res.statusCode !== 200) {
+    if (_res.data?.statusCode !== 200) {
       setLoading(false);
       return api["error"]({
         message: "Lỗi",
@@ -39,9 +39,9 @@ export default function LoginPage() {
       });
     }
 
-    if (_res.statusCode === 200) {
+    if (_res.data?.statusCode === 200) {
       setLoading(false);
-      sessionStorage.setItem("authUser", _res.jwt);
+      sessionStorage.setItem("authUser", _res.data?.jwt);
       return navigate("/");
     }
   };

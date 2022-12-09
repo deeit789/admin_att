@@ -17,8 +17,17 @@ if (token)
 
 // intercepting to capture errors
 axios.interceptors.response.use(
+  function (config) {
+    const token = sessionStorage.getItem("authUser")
+      ? sessionStorage.getItem("authUser")
+      : null;
+
+    if (token)
+      axios.defaults.headers.common["Authorization"] = token.replace(/"/g, "");
+    return config;
+  },
   function (response) {
-    return response.data ? response.data : response;
+    return response;
   },
   function (error) {
     console.error(error);

@@ -42,7 +42,7 @@ export default function HistoryMatchPage() {
 
     const _res = await getAllDataPrediction(queryUrl);
 
-    const _data = _res.map((item, index) => {
+    const _data = _res.data?.map((item, index) => {
       return {
         key: item._id,
         playerId: item.playerId,

@@ -36,9 +36,8 @@ export default function MatchPage() {
     };
 
     const _res = await getAllDataMatch(queryUrl);
-    console.log("🚀 ~ file: index.js:38 ~ fetchAllDataMatch ~ _res", _res);
 
-    const _data = _res.map((item, index) => {
+    const _data = _res.data?.map((item, index) => {
       return {
         key: item._id,
         group: item.group,
@@ -46,6 +45,7 @@ export default function MatchPage() {
         away_team: item.away_team,
         local_date: item.local_date,
         local_time: item.local_time,
+        datetime: dayjs(`${item.local_date} ${item.local_time}`).format(),
       };
     });
     setData(_data);
@@ -80,12 +80,10 @@ export default function MatchPage() {
   };
 
   const onHandleSyncWC2022 = async () => {
-    await setTimeout(() => {
-      console.log(1);
-      setLoadingSync(true);
+    setLoadingSync(true);
+    setTimeout(() => {
+      setLoadingSync(false);
     }, 3000);
-    console.log(2);
-    await setLoadingSync(false);
   };
 
   const handleTableChange = (pagination, filters, sorter) => {
