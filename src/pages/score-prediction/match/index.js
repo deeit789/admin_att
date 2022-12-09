@@ -1,19 +1,128 @@
-import React from "react";
-import { Button, Form, Input, Row, Col, Divider, DatePicker } from "antd";
+import React, { useState, useEffect } from "react";
+import {
+  Button,
+  Form,
+  Input,
+  Row,
+  Col,
+  Divider,
+  DatePicker,
+  Space,
+  Table,
+} from "antd";
 import dayjs from "dayjs";
+import { SearchOutlined, SyncOutlined } from "@ant-design/icons";
 
 import BreadcrumbCustom from "../../../common/breadcrumb.js";
-
+import { getAllDataMatch } from "../../../helpers/helper";
 export default function MatchPage() {
+  const [form] = Form.useForm();
+  const [loading, setLoading] = useState(false);
+  const [loadingSync, setLoadingSync] = useState(false);
+  const [data, setData] = useState([]);
+  const [tableParams, setTableParams] = useState({
+    pagination: {
+      current: 1,
+      pageSize: 10,
+    },
+  });
+
+  const fetchAllDataMatch = async (dataFilter) => {
+    setLoading(true);
+    const queryUrl = {
+      limit: tableParams.pagination.pageSize,
+      offset: tableParams.pagination.current,
+      date: dataFilter.date ? dataFilter.date : "",
+    };
+
+    const _res = await getAllDataMatch(queryUrl);
+    console.log("🚀 ~ file: index.js:38 ~ fetchAllDataMatch ~ _res", _res);
+
+    const _data = _res.map((item, index) => {
+      return {
+        key: item._id,
+        group: item.group,
+        home_team: item.home_team,
+        away_team: item.away_team,
+        local_date: item.local_date,
+        local_time: item.local_time,
+      };
+    });
+    setData(_data);
+    setTableParams({
+      ...tableParams,
+      pagination: {
+        ...tableParams.pagination,
+        total: _res.count,
+      },
+    });
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    const dtReq = {
+      date: form.getFieldValue("date")
+        ? dayjs(form.getFieldValue("date")).format("MM/DD/YYYY")
+        : "",
+    };
+
+    fetchAllDataMatch(dtReq);
+  }, [JSON.stringify(tableParams)]);
+
   const onFinish = (values) => {
-    console.log("Success:", values);
-    const day = dayjs(values.start_datetime.$d).format("MM/DD/YYYY");
-    const time = dayjs(values.start_datetime.$d).format("HH:mm");
-    console.log(dayjs(values.start_datetime.$d).format("HH:mm"));
+    const dtReq = {
+      date: values.date ? dayjs(values.date).format("MM/DD/YYYY") : "",
+    };
+    fetchAllDataMatch(dtReq);
   };
   const onFinishFailed = (errorInfo) => {
     console.log("Failed:", errorInfo);
   };
+
+  const onHandleSyncWC2022 = async () => {
+    await setTimeout(() => {
+      console.log(1);
+      setLoadingSync(true);
+    }, 3000);
+    console.log(2);
+    await setLoadingSync(false);
+  };
+
+  const handleTableChange = (pagination, filters, sorter) => {
+    setTableParams({
+      pagination,
+      filters,
+      ...sorter,
+    });
+  };
+
+  const columns = [
+    {
+      title: "Vòng đấu",
+      dataIndex: "group",
+      key: "group",
+    },
+    {
+      title: "Ngày",
+      dataIndex: "local_date",
+      key: "local_date",
+    },
+    {
+      title: "Giờ bắt đầu",
+      dataIndex: "local_time",
+      key: "local_time",
+    },
+    {
+      title: "Tên đội nhà",
+      dataIndex: "home_team",
+      key: "home_team",
+    },
+    {
+      title: "Tên đội khách",
+      dataIndex: "away_team",
+      key: "away_team",
+    },
+  ];
 
   return (
     <div>
@@ -23,6 +132,7 @@ export default function MatchPage() {
       />
       <Divider />
       <Form
+        form={form}
         name="formMatch"
         layout="vertical"
         initialValues={{
@@ -32,7 +142,7 @@ export default function MatchPage() {
         onFinishFailed={onFinishFailed}
         autoComplete="off"
       >
-        <Row gutter={[16, 0]}>
+        {/* <Row gutter={[16, 0]}>
           <Col span={6}>
             <Form.Item
               label="Vòng thi đấu"
@@ -124,8 +234,48 @@ export default function MatchPage() {
               </Button>
             </Form.Item>
           </Col>
+        </Row> */}
+        <Row gutter={[16, 0]}>
+          <Col span={6}>
+            <Form.Item label="Ngày thi đấu" name="date">
+              <DatePicker style={{ width: "100%" }} />
+            </Form.Item>
+          </Col>
+          <Col span={6}>
+            <Form.Item label=" ">
+              <Space>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  icon={<SearchOutlined />}
+                >
+                  Xem lịch thi đấu
+                </Button>
+                <Button
+                  type="primary"
+                  htmlType="button"
+                  icon={<SyncOutlined />}
+                  onClick={onHandleSyncWC2022}
+                  loading={loadingSync}
+                >
+                  Đồng bộ lịch thi đấu WC 2022
+                </Button>
+              </Space>
+            </Form.Item>
+          </Col>
         </Row>
       </Form>
+      <Row>
+        <Col span={24}>
+          <Table
+            columns={columns}
+            dataSource={data}
+            pagination={tableParams.pagination}
+            loading={loading}
+            onChange={handleTableChange}
+          />
+        </Col>
+      </Row>
     </div>
   );
 }

@@ -41,7 +41,7 @@ export default function LoginPage() {
 
     if (_res.statusCode === 200) {
       setLoading(false);
-      sessionStorage.setItem("authUser", JSON.stringify(_res.jwt));
+      sessionStorage.setItem("authUser", _res.jwt);
       return navigate("/");
     }
   };

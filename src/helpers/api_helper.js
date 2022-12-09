@@ -3,20 +3,17 @@ import { api } from "./config";
 import { message } from "antd";
 
 // default
-axios.defaults.baseURL = api.API_URL;
-// axios.defaults.baseURL = api.API_URL_DEV;
+// axios.defaults.baseURL = api.API_URL;
+axios.defaults.baseURL = api.API_URL_DEV;
 // content type
 axios.defaults.headers.post["Content-Type"] = "application/json";
 
-// credentials
-// axios.defaults.withCredentials = true;
-
-const urlRefreshToken = "/api/users/refresh-token";
-// content type
 const token = sessionStorage.getItem("authUser")
   ? sessionStorage.getItem("authUser")
   : null;
-if (token) axios.defaults.headers.common["Authorization"] = token;
+
+if (token)
+  axios.defaults.headers.common["Authorization"] = token.replace(/"/g, "");
 
 // intercepting to capture errors
 axios.interceptors.response.use(
@@ -24,10 +21,12 @@ axios.interceptors.response.use(
     return response.data ? response.data : response;
   },
   function (error) {
-    if (error.response.data.message === "invalid token") {
-      message.error(`Please login to continue!`);
+    console.error(error);
+    if (error.response.data.message === "jwt expired") {
+      message.error(`Vui lòng đăng nhập để tiếp tục!`);
       setTimeout(() => {
-        // window.location.replace("/logout");
+        sessionStorage.removeItem("authUser");
+        window.location.replace("/logout");
       }, 3000);
     }
 
@@ -39,20 +38,14 @@ axios.interceptors.response.use(
  * @param {*} token
  */
 const setAuthorization = (token) => {
-  axios.defaults.headers.common["Authorization"] = token;
+  axios.defaults.headers.common["Authorization"] = token.replace(/"/g, "");
 };
 
 class APIClient {
-  /**
-   * Fetches data from given url
-   */
   get = async (url, params) => {
     let response;
     let paramKeys = [];
-    const token = sessionStorage.getItem("authUser")
-      ? sessionStorage.getItem("authUser")
-      : null;
-    if (token) axios.defaults.headers.common["Authorization"] = token;
+
     if (params) {
       Object.keys(params).map((key) => {
         paramKeys.push(key + "=" + params[key]);
@@ -63,7 +56,7 @@ class APIClient {
       await axios
         .get(`${url}?${queryString}`, params)
         .then(function (res) {
-          response = res;
+          response = res.data ? res.data : res;
         })
         .catch(function (error) {
           console.error(error);
@@ -72,38 +65,23 @@ class APIClient {
       await axios
         .get(`${url}`, params)
         .then(function (res) {
-          response = res;
+          response = res.data ? res.data : res;
         })
         .catch(function (error) {
-          if (error === "Request failed with status code 401") {
-            axios
-              .post(`${urlRefreshToken}`, null)
-              .then((res) => {
-                console.log(res);
-              })
-              .catch((err) => {
-                console.log(err);
-              });
-          }
+          console.error(error);
         });
     }
     return response;
   };
-  /**
-   * post given data to url
-   */
+
   post = (url, data) => {
     return axios.post(url, data);
   };
-  /**
-   * Updates data
-   */
+
   put = (url, data) => {
     return axios.put(url, data);
   };
-  /**
-   * Delete
-   */
+
   delete = (url, config) => {
     return axios.delete(url, { ...config });
   };
@@ -133,7 +111,7 @@ const getLoggedinUser = () => {
   if (!user) {
     return null;
   } else {
-    return JSON.parse(user);
+    return user;
   }
 };
 

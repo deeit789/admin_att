@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import BreadcrumbCustom from "../../../common/breadcrumb.js";
 import dayjs from "dayjs";
 import { SearchOutlined } from "@ant-design/icons";
@@ -29,69 +29,54 @@ export default function HistoryMatchPage() {
     },
   });
 
-  const fetchDataHistory = async (date) => {
+  const fetchDataHistory = async (dataFilter) => {
     setLoading(true);
-    if (!date) {
-      const dataReq = {
-        limit: 10,
-        offset: 1,
+    const queryUrl = {
+      limit: tableParams.pagination.pageSize,
+      offset: tableParams.pagination.current,
+      playerId: dataFilter.playerId ? dataFilter.playerId : "",
+      date: dataFilter.date ? dataFilter.date : "",
+      ip: dataFilter.ip ? dataFilter.ip : "",
+      fp: dataFilter.fp ? dataFilter.fp : "",
+    };
+
+    const _res = await getAllDataPrediction(queryUrl);
+
+    const _data = _res.map((item, index) => {
+      return {
+        key: item._id,
+        playerId: item.playerId,
+        date: item.createDate,
+        result1: item.result1,
+        result2: item.result2,
+        result3: item.result3,
+        result4: item.result4,
+        ip: item.ip,
+        fp: item.fp,
       };
-      const _res = await getAllDataPrediction(dataReq);
-
-      const _data = _res.map((item, index) => {
-        return {
-          key: item._id,
-          playerId: item.playerId,
-          date: item.createDate,
-          result1: item.result1,
-          result2: item.result2,
-          result3: item.result3,
-          result4: item.result4,
-          ip: item.ip,
-          fp: item.fp,
-        };
-      });
-
-      setData(_data);
-      setLoading(false);
-      setTableParams({
-        ...tableParams,
-        pagination: {
-          ...tableParams.pagination,
-          total: _data.length,
-        },
-      });
-    } else {
-      const day = dayjs(Date.now()).format("MM/DD/YYYY");
-      const _res = await getDataPredictionByDate({ date: day });
-      const _data = _res.map((item, index) => {
-        return {
-          key: item._id,
-          playerId: item.playerId,
-          date: item.createDate,
-          result1: item.result1,
-          result2: item.result2,
-          result3: item.result3,
-          result4: item.result4,
-          ip: item.ip,
-          fp: item.fp,
-        };
-      });
-
-      setData(_data);
-      setLoading(false);
-      setTableParams({
-        ...tableParams,
-        pagination: {
-          ...tableParams.pagination,
-          total: _data.length,
-        },
-      });
-    }
+    });
+    setData(_data);
+    setTableParams({
+      ...tableParams,
+      pagination: {
+        ...tableParams.pagination,
+        total: _res.count,
+      },
+    });
+    setLoading(false);
   };
 
   useEffect(() => {
-    fetchDataHistory();
+    const dtReq = {
+      playerId: form.getFieldValue("playerId"),
+      date: form.getFieldValue("date")
+        ? dayjs(form.getFieldValue("date")).format("MM/DD/YYYY")
+        : "",
+      ip: form.getFieldValue("ip"),
+      fp: form.getFieldValue("fp"),
+    };
+
+    fetchDataHistory(dtReq);
   }, [JSON.stringify(tableParams)]);
 
   const handleTableChange = (pagination, filters, sorter) => {
@@ -102,11 +87,14 @@ export default function HistoryMatchPage() {
     });
   };
 
-  const onFinish = (values) => {
-    console.log("Success:", values);
-    const day = dayjs(values.start_datetime.$d).format("MM/DD/YYYY");
-    const time = dayjs(values.start_datetime.$d).format("HH:mm");
-    console.log(dayjs(values.start_datetime.$d).format("HH:mm"));
+  const onFinish = (data) => {
+    const dtReq = {
+      playerId: data.playerId,
+      date: data.date ? dayjs(data.date).format("MM/DD/YYYY") : "",
+      ip: data.ip,
+      fp: data.fp,
+    };
+    fetchDataHistory(dtReq);
   };
 
   const onFinishFailed = (errorInfo) => {
@@ -119,44 +107,52 @@ export default function HistoryMatchPage() {
 
   const columns = [
     {
-      title: "playerId",
+      title: "Tên đăng nhập",
       dataIndex: "playerId",
       key: "playerId",
+      width: "10%",
     },
     {
       title: "Ngày",
       dataIndex: "date",
       key: "date",
+      width: "5%",
     },
     {
       title: "Trận 1",
       dataIndex: "result1",
       key: "result1",
+      width: "15%",
     },
     {
       title: "Trận 2",
       dataIndex: "result2",
       key: "result2",
+      width: "15%",
     },
     {
       title: "Trận 3",
       dataIndex: "result3",
       key: "result3",
+      width: "15%",
     },
     {
       title: "Trận 4",
       dataIndex: "result4",
       key: "result4",
+      width: "15%",
     },
     {
       title: "IP",
       dataIndex: "ip",
       key: "ip",
+      width: "10%",
     },
     {
       title: "FP",
       dataIndex: "fp",
       key: "fp",
+      width: "10%",
     },
   ];
 
@@ -185,7 +181,7 @@ export default function HistoryMatchPage() {
             </Form.Item>
           </Col>
           <Col span={6}>
-            <Form.Item label="Ngày thi đấu" name="start_date">
+            <Form.Item label="Ngày thi đấu" name="date">
               <DatePicker style={{ width: "100%" }} />
             </Form.Item>
           </Col>
@@ -196,7 +192,7 @@ export default function HistoryMatchPage() {
           </Col>
           <Col span={6}>
             <Form.Item label="FP" name="fp">
-              <Input placeholder="Nhập FB" />
+              <Input placeholder="Nhập FP" />
             </Form.Item>
           </Col>
 

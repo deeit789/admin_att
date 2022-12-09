@@ -30,3 +30,7 @@ export const getDataPredictionByDate = (data) => {
 export const getAllDataPrediction = (data) => {
   return api.get(url.API_V1_MATCHSCORE_GET_ALL, data);
 };
+
+export const getAllDataMatch = (data) => {
+  return api.get(url.API_V1_MATCH_GET_ALL, data);
+};
